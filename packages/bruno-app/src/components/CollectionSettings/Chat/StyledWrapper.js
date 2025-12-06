@@ -13,6 +13,33 @@ const StyledWrapper = styled.div`
     overflow: hidden;
   }
 
+  .chat-main-layout {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .chat-left-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .chat-right-panel {
+    display: flex;
+    flex-direction: column;
+    width: 400px;
+    min-width: 350px;
+    max-width: 50%;
+    height: 100%;
+    overflow: hidden;
+    border-left: 1px solid ${(props) => props.theme.border};
+  }
+
   .chat-messages {
     flex: 1;
     overflow-y: auto;

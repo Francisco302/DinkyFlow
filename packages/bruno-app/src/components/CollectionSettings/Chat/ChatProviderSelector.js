@@ -66,62 +66,73 @@ const ChatProviderSelector = ({ collection }) => {
     label: model
   }));
 
+  const isApiKeyConfigured = chatConfig.apiKey && chatConfig.apiKey.trim() !== '';
+
   return (
     <div className="provider-selector">
       <div className="mb-4">
-        <label className="block font-medium mb-2">AI Provider</label>
-        <div className="inline-flex items-center cursor-pointer">
-          <Dropdown onCreate={onProviderDropdownCreate} icon={<ProviderIcon />} placement="bottom-end">
-            {providerOptions.map((option) => (
-              <div
-                key={option.value}
-                className="dropdown-item"
-                onClick={() => {
-                  providerDropdownRef.current?.hide();
-                  handleProviderChange(option.value);
-                }}
-              >
-                {option.label}
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <label className="block font-medium mb-2">AI Provider</label>
+            <div className="inline-flex items-center cursor-pointer">
+              <Dropdown onCreate={onProviderDropdownCreate} icon={<ProviderIcon />} placement="bottom-end">
+                {providerOptions.map((option) => (
+                  <div
+                    key={option.value}
+                    className="dropdown-item"
+                    onClick={() => {
+                      providerDropdownRef.current?.hide();
+                      handleProviderChange(option.value);
+                    }}
+                  >
+                    {option.label}
+                  </div>
+                ))}
+              </Dropdown>
+            </div>
+          </div>
+
+          {modelOptions.length > 0 && (
+            <div className="flex-1">
+              <label className="block font-medium mb-2">Model</label>
+              <div className="inline-flex items-center cursor-pointer">
+                <Dropdown onCreate={onModelDropdownCreate} icon={<ModelIcon />} placement="bottom-end">
+                  {modelOptions.map((option) => (
+                    <div
+                      key={option.value}
+                      className="dropdown-item"
+                      onClick={() => {
+                        modelDropdownRef.current?.hide();
+                        handleModelChange(option.value);
+                      }}
+                    >
+                      {option.label}
+                    </div>
+                  ))}
+                </Dropdown>
               </div>
-            ))}
-          </Dropdown>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="mb-4">
-        <label className="block font-medium mb-2">API Key</label>
-        <div className="single-line-editor-wrapper flex items-center">
-          <SingleLineEditor
-            value={chatConfig.apiKey}
-            theme={storedTheme}
-            onSave={saveConfig}
-            onChange={handleApiKeyChange}
-            collection={collection}
-            isSecret={true}
-            placeholder={providerConfig.apiKeyPlaceholder}
-          />
-          {showWarning && <SensitiveFieldWarning fieldName="chat-api-key" warningMessage={warningMessage} />}
-        </div>
-      </div>
-
-      {modelOptions.length > 0 && (
+      {!isApiKeyConfigured && (
         <div className="mb-4">
-          <label className="block font-medium mb-2">Model</label>
-          <div className="inline-flex items-center cursor-pointer">
-            <Dropdown onCreate={onModelDropdownCreate} icon={<ModelIcon />} placement="bottom-end">
-              {modelOptions.map((option) => (
-                <div
-                  key={option.value}
-                  className="dropdown-item"
-                  onClick={() => {
-                    modelDropdownRef.current?.hide();
-                    handleModelChange(option.value);
-                  }}
-                >
-                  {option.label}
-                </div>
-              ))}
-            </Dropdown>
+          <label className="block font-medium mb-2">API Key</label>
+          <div className="text-red-500 text-sm mb-2">
+            API key aún no está configurada para {providerConfig.displayName}. Por favor, configúrala en Preferences → AI o ingrésala aquí.
+          </div>
+          <div className="single-line-editor-wrapper flex items-center">
+            <SingleLineEditor
+              value={chatConfig.apiKey}
+              theme={storedTheme}
+              onSave={saveConfig}
+              onChange={handleApiKeyChange}
+              collection={collection}
+              isSecret={true}
+              placeholder={providerConfig.apiKeyPlaceholder}
+            />
+            {showWarning && <SensitiveFieldWarning fieldName="chat-api-key" warningMessage={warningMessage} />}
           </div>
         </div>
       )}

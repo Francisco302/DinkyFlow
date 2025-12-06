@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import get from 'lodash/get';
 import { updateCollectionChatConfig } from 'providers/ReduxStore/slices/collections';
 import { saveCollectionSettings } from 'providers/ReduxStore/slices/collections/actions';
+import { PROVIDER_TYPES } from '../providers';
 
 /**
  * Custom hook for managing chat configuration
@@ -11,6 +12,7 @@ import { saveCollectionSettings } from 'providers/ReduxStore/slices/collections/
  */
 export const useChatConfig = (collection) => {
     const dispatch = useDispatch();
+    const preferences = useSelector((state) => state.app.preferences);
 
     // Get chat config from brunoConfig (draft or saved)
     const chatConfig = useMemo(() => {
@@ -18,15 +20,28 @@ export const useChatConfig = (collection) => {
             ? get(collection, 'draft.brunoConfig.chat', {})
             : get(collection, 'brunoConfig.chat', {});
 
+        const provider = config.provider || 'gemini';
+        
+        // Get API key from collection config, or fallback to global preferences
+        let apiKey = config.apiKey || '';
+        if (!apiKey) {
+            // Use global preferences API key based on provider
+            if (provider === PROVIDER_TYPES.GEMINI) {
+                apiKey = get(preferences, 'ai.geminiApiKey', '') || '';
+            } else if (provider === PROVIDER_TYPES.CHATGPT) {
+                apiKey = get(preferences, 'ai.chatGptApiKey', '') || '';
+            }
+        }
+
         return {
-            provider: config.provider || 'gemini',
-            apiKey: config.apiKey || '',
+            provider,
+            apiKey,
             model: config.model || '',
             temperature: config.temperature ?? 0.7,
             maxTokens: config.maxTokens || 1000,
             ...config
         };
-    }, [collection]);
+    }, [collection, preferences]);
 
     /**
      * Updates chat configuration
@@ -64,7 +79,22 @@ export const useChatConfig = (collection) => {
      * @param {string} provider - Provider type
      */
     const updateProvider = (provider) => {
-        updateConfig({ provider });
+        // If there's no API key in collection config, use the one from global preferences
+        const collectionApiKey = collection.draft?.brunoConfig
+            ? get(collection, 'draft.brunoConfig.chat.apiKey', '')
+            : get(collection, 'brunoConfig.chat.apiKey', '');
+        
+        let apiKey = collectionApiKey;
+        if (!apiKey) {
+            // Use global preferences API key based on new provider
+            if (provider === PROVIDER_TYPES.GEMINI) {
+                apiKey = get(preferences, 'ai.geminiApiKey', '') || '';
+            } else if (provider === PROVIDER_TYPES.CHATGPT) {
+                apiKey = get(preferences, 'ai.chatGptApiKey', '') || '';
+            }
+        }
+        
+        updateConfig({ provider, apiKey });
     };
 
     /**
