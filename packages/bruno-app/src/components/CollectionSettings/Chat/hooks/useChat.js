@@ -3,6 +3,7 @@ import get from 'lodash/get';
 import { createProvider, PROVIDER_CONFIGS } from '../providers';
 import { useChatConfig } from './useChatConfig';
 import { flattenItems } from 'utils/collections';
+import { buildInitialPrompt, buildRequestsInfo } from '../utils/chatPromptTemplate';
 
 /**
  * Custom hook for managing chat state and interactions
@@ -11,16 +12,56 @@ import { flattenItems } from 'utils/collections';
  */
 export const useChat = (collection) => {
     const { chatConfig } = useChatConfig(collection);
-    const [messages, setMessages] = useState([]);
+    const storageKey = `chat_messages_${collection?.uid || 'default'}`;
+    
+    // Load messages from localStorage on mount
+    const loadPersistedMessages = useCallback(() => {
+        try {
+            const stored = localStorage.getItem(storageKey);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                // Only restore if it's a valid array
+                if (Array.isArray(parsed)) {
+                    return parsed;
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to load persisted chat messages:', error);
+        }
+        return [];
+    }, [storageKey]);
+
+    const [messages, setMessages] = useState(loadPersistedMessages);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const abortControllerRef = useRef(null);
+
+    // Persist messages to localStorage whenever they change
+    useEffect(() => {
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(messages));
+        } catch (error) {
+            console.warn('Failed to persist chat messages:', error);
+        }
+    }, [messages, storageKey]);
 
     // Get collection docs (overview) for context
     const docs = useMemo(() => {
         return collection.draft?.root
             ? get(collection, 'draft.root.docs', '')
             : get(collection, 'root.docs', '');
+    }, [collection]);
+
+    // Get current request from collection root (if available)
+    const currentRequest = useMemo(() => {
+        const root = collection.draft?.root || collection.root;
+        if (root?.request) {
+            return {
+                ...root.request,
+                name: root.name || 'Current Request'
+            };
+        }
+        return null;
     }, [collection]);
 
     // Get all requests from the collection for context
@@ -34,26 +75,7 @@ export const useChat = (collection) => {
             return item.request && ['http-request', 'graphql-request', 'grpc-request', 'ws-request'].includes(item.type);
         });
 
-        if (requests.length === 0) {
-            return '';
-        }
-
-        const formatRequest = (item) => {
-            const request = item.draft ? item.draft.request : item.request;
-            const requestDocs = item.draft ? get(item, 'draft.request.docs', '') : get(item, 'request.docs', '');
-            const method = request?.method || 'GET';
-            const url = request?.url || '';
-
-            let formatted = `- ${item.name || 'Unnamed Request'}\n  Method: ${method}\n  URL: ${url}`;
-
-            if (requestDocs?.trim()) {
-                formatted += `\n  Description: ${requestDocs.trim()}`;
-            }
-
-            return formatted;
-        };
-
-        return `\n\nAPI Requests in this Collection:\n${requests.map(formatRequest).join('\n\n')}`;
+        return buildRequestsInfo(requests);
     }, [collection]);
 
     // Initialize provider when config changes
@@ -108,31 +130,28 @@ export const useChat = (collection) => {
             let userContent = content.trim();
 
             if (isFirstMessage) {
-                const contextParts = [];
-
-                if (docs?.trim()) {
-                    contextParts.push(`Collection Overview:\n${docs}`);
-                }
-
-                if (requestsInfo?.trim()) {
-                    contextParts.push(requestsInfo);
-                }
-
-                if (contextParts.length > 0) {
-                    userContent = `${contextParts.join('\n')}\n\n---\n\nUser Question: ${content.trim()}`;
-                }
+                userContent = buildInitialPrompt({
+                    collectionDocs: docs,
+                    requestsInfo: requestsInfo,
+                    currentRequest: currentRequest,
+                    userQuestion: content.trim()
+                });
             }
 
+            // Build API messages - use full content (with context) for API calls
             const apiMessages = [
                 ...messages.map((msg) => ({
                     role: msg.role,
-                    content: msg.content
+                    // Use apiContent if available (for first message with context), otherwise use content
+                    content: msg.apiContent || msg.content
                 })),
                 {
                     role: 'user',
                     content: userContent
                 }
             ];
+
+            console.log('apiMessages', apiMessages);
 
             // Generate curl command before sending
             let curlCommand = '';
@@ -148,9 +167,11 @@ export const useChat = (collection) => {
             }
 
             // Add user message with curl
+            // Save original content for display, and full content (with context) for API
             const userMessage = {
                 role: 'user',
-                content: content.trim(),
+                content: content.trim(), // Original user content for display
+                apiContent: isFirstMessage ? userContent : undefined, // Full content with context for API
                 timestamp: Date.now(),
                 curl: curlCommand
             };
@@ -203,7 +224,13 @@ export const useChat = (collection) => {
             abortControllerRef.current = null;
         }
         setIsLoading(false);
-    }, []);
+        // Clear from localStorage
+        try {
+            localStorage.removeItem(storageKey);
+        } catch (error) {
+            console.warn('Failed to clear persisted chat messages:', error);
+        }
+    }, [storageKey]);
 
     /**
      * Cancels the current request

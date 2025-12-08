@@ -32,6 +32,10 @@ const initialState = {
     autoSave: {
       enabled: false,
       interval: 1000
+    },
+    ai: {
+      geminiApiKey: '',
+      chatGptApiKey: ''
     }
   },
   generateCode: {

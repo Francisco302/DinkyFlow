@@ -51,6 +51,10 @@ const defaultPreferences = {
   autoSave: {
     enabled: false,
     interval: 1000
+  },
+  ai: {
+    geminiApiKey: '',
+    chatGptApiKey: ''
   }
 };
 
@@ -98,6 +102,10 @@ const preferencesSchema = Yup.object().shape({
   autoSave: Yup.object({
     enabled: Yup.boolean(),
     interval: Yup.number().min(100)
+  }),
+  ai: Yup.object({
+    geminiApiKey: Yup.string().max(2048).nullable(),
+    chatGptApiKey: Yup.string().max(2048).nullable()
   })
 });
 
