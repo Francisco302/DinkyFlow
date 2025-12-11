@@ -1,10 +1,12 @@
 import BaseProvider from './BaseProvider';
 import ChatGPTProvider from './ChatGPTProvider';
 import GeminiProvider from './GeminiProvider';
+import GroqProvider from './GroqProvider';
 
 export const PROVIDER_TYPES = {
   CHATGPT: 'chatgpt',
-  GEMINI: 'gemini'
+  GEMINI: 'gemini',
+  GROQ: 'groq'
 };
 
 export const PROVIDER_CONFIGS = {
@@ -23,6 +25,22 @@ export const PROVIDER_CONFIGS = {
     defaultModel: 'gpt-3.5-turbo',
     apiKeyPlaceholder: 'sk-...',
     models: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo']
+  },
+  [PROVIDER_TYPES.GROQ]: {
+    name: 'Groq',
+    displayName: 'Groq',
+    providerClass: GroqProvider,
+    defaultModel: 'llama-3.1-70b-versatile',
+    apiKeyPlaceholder: 'Enter your Groq API key',
+    models: [
+      'llama-3.1-70b-versatile',
+      'llama-3.1-8b-instant',
+      'llama-3-70b-8192',
+      'llama-3-8b-8192',
+      'mixtral-8x7b-32768',
+      'gemma-7b-it',
+      'openai/gpt-oss-120b'
+    ]
   },
 };
 
@@ -53,5 +71,5 @@ export const getAvailableProviders = () => {
   return Object.keys(PROVIDER_CONFIGS);
 };
 
-export { BaseProvider, ChatGPTProvider, GeminiProvider };
+export { BaseProvider, ChatGPTProvider, GeminiProvider, GroqProvider };
 

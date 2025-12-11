@@ -55,7 +55,7 @@ const systemMonitor = new SystemMonitor();
 // Reference: https://content-security-policy.com/
 const contentSecurityPolicy = [
   "default-src 'self'",
-  "connect-src 'self' https://*.posthog.com https://api.openai.com https://generativelanguage.googleapis.com",
+  "connect-src 'self' https://*.posthog.com https://api.openai.com https://generativelanguage.googleapis.com https://api.groq.com",
   "font-src 'self' https: data:;",
   "frame-src data:",
   // this has been commented out to make oauth2 work
