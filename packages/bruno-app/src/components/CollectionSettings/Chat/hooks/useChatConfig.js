@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import get from 'lodash/get';
 import { updateCollectionChatConfig } from 'providers/ReduxStore/slices/collections';
 import { saveCollectionSettings } from 'providers/ReduxStore/slices/collections/actions';
-import { PROVIDER_TYPES } from '../providers';
+import { PROVIDER_TYPES, PROVIDER_CONFIGS } from '../providers';
 
 /**
  * Custom hook for managing chat configuration
@@ -19,7 +19,6 @@ export const useChatConfig = (collection) => {
         const config = collection.draft?.brunoConfig
             ? get(collection, 'draft.brunoConfig.chat', {})
             : get(collection, 'brunoConfig.chat', {});
-
         const provider = config.provider || 'gemini';
         
         // Get API key from collection config, or fallback to global preferences
@@ -30,6 +29,8 @@ export const useChatConfig = (collection) => {
                 apiKey = get(preferences, 'ai.geminiApiKey', '') || '';
             } else if (provider === PROVIDER_TYPES.CHATGPT) {
                 apiKey = get(preferences, 'ai.chatGptApiKey', '') || '';
+            } else if (provider === PROVIDER_TYPES.GROQ) {
+                apiKey = get(preferences, 'ai.groqApiKey', '') || '';
             }
         }
 
@@ -91,10 +92,21 @@ export const useChatConfig = (collection) => {
                 apiKey = get(preferences, 'ai.geminiApiKey', '') || '';
             } else if (provider === PROVIDER_TYPES.CHATGPT) {
                 apiKey = get(preferences, 'ai.chatGptApiKey', '') || '';
+            } else if (provider === PROVIDER_TYPES.GROQ) {
+                apiKey = get(preferences, 'ai.groqApiKey', '') || '';
             }
         }
         
-        updateConfig({ provider, apiKey });
+        // Get default model for the new provider
+        const providerConfig = PROVIDER_CONFIGS[provider];
+        const defaultModel = providerConfig?.defaultModel || '';
+        
+        // Update provider, API key, and reset model to default for new provider
+        updateConfig({ 
+            provider, 
+            apiKey,
+            model: defaultModel 
+        });
     };
 
     /**

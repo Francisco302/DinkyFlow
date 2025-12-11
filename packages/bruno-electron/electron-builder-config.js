@@ -65,7 +65,9 @@ const config = {
       }
     ],
     sign: null,
-    publisherName: 'Bruno Software Inc'
+    signingHashAlgorithms: null,
+    publisherName: 'Bruno Software Inc',
+    verifyUpdateCodeSignature: false
   },
   nsis: {
     oneClick: false,

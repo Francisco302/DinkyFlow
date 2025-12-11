@@ -114,13 +114,16 @@ async function main() {
     console.log('Building the Electron distribution');
 
     // Determine the OS and set the appropriate argument
-    let osArg;
-    if (os.platform() === 'win32') {
-      osArg = 'win';
-    } else if (os.platform() === 'darwin') {
-      osArg = 'mac';
-    } else {
-      osArg = 'linux';
+    // Allow command line argument to override auto-detection
+    let osArg = process.argv[2];
+    if (!osArg) {
+      if (os.platform() === 'win32') {
+        osArg = 'win';
+      } else if (os.platform() === 'darwin') {
+        osArg = 'mac';
+      } else {
+        osArg = 'linux';
+      }
     }
 
     await execCommandWithOutput(`npm run dist:${osArg} --workspace=packages/bruno-electron`);

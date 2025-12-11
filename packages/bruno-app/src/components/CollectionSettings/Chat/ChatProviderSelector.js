@@ -19,12 +19,8 @@ const ChatProviderSelector = ({ collection }) => {
   const providerConfig = PROVIDER_CONFIGS[chatConfig.provider] || PROVIDER_CONFIGS[PROVIDER_TYPES.GEMINI];
 
   const handleProviderChange = (providerType) => {
+    // updateProvider now handles model reset automatically
     updateProvider(providerType);
-    // Reset model to default for new provider
-    const newProviderConfig = PROVIDER_CONFIGS[providerType];
-    if (newProviderConfig) {
-      updateModel(newProviderConfig.defaultModel);
-    }
   };
 
   const handleApiKeyChange = (apiKey) => {

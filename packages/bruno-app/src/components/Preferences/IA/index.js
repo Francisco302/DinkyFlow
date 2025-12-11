@@ -13,13 +13,15 @@ const AI = ({ close }) => {
 
   const preferencesSchema = Yup.object().shape({
     geminiApiKey: Yup.string().max(2048).nullable(),
-    chatGptApiKey: Yup.string().max(2048).nullable()
+    chatGptApiKey: Yup.string().max(2048).nullable(),
+    groqApiKey: Yup.string().max(2048).nullable()
   });
 
   const formik = useFormik({
     initialValues: {
       geminiApiKey: get(preferences, 'ai.geminiApiKey', ''),
-      chatGptApiKey: get(preferences, 'ai.chatGptApiKey', '')
+      chatGptApiKey: get(preferences, 'ai.chatGptApiKey', ''),
+      groqApiKey: get(preferences, 'ai.groqApiKey', '')
     },
     validationSchema: preferencesSchema,
     onSubmit: async (values) => {
@@ -38,7 +40,8 @@ const AI = ({ close }) => {
         ...preferences,
         ai: {
           geminiApiKey: newPreferences.geminiApiKey || '',
-          chatGptApiKey: newPreferences.chatGptApiKey || ''
+          chatGptApiKey: newPreferences.chatGptApiKey || '',
+          groqApiKey: newPreferences.groqApiKey || ''
         }
       }))
       .then(() => {
@@ -100,8 +103,32 @@ const AI = ({ close }) => {
             Your API key will be stored securely and used for AI features.
           </div>
         </div>
+        <div className="flex flex-col mt-6">
+          <label className="block select-none" htmlFor="groqApiKey">
+            Groq API Key
+          </label>
+          <input
+            type="password"
+            name="groqApiKey"
+            id="groqApiKey"
+            className="block textbox mt-2 w-full"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            onChange={formik.handleChange}
+            value={formik.values.groqApiKey || ''}
+            placeholder="Enter your Groq API key"
+          />
+          <div className="mt-1 text-sm text-gray-500">
+            Your API key will be stored securely and used for AI features.
+          </div>
+        </div>
         {formik.touched.chatGptApiKey && formik.errors.chatGptApiKey ? (
           <div className="text-red-500">{formik.errors.chatGptApiKey}</div>
+        ) : null}
+        {formik.touched.groqApiKey && formik.errors.groqApiKey ? (
+          <div className="text-red-500">{formik.errors.groqApiKey}</div>
         ) : null}
 
         <div className="mt-10">
